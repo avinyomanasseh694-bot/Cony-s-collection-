@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cony's Collection</title>
+<style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f7f7f7; }
+    header { background:#ff69b4; color:white; padding:20px; text-align:center; }
+    header h1 { margin:0; }
+    .social-buttons { margin-top:10px; }
+    .social-buttons a { margin:0 10px; text-decoration:none; color:white; font-weight:bold; border:2px solid white; padding:5px 10px; border-radius:5px; transition:0.3s; }
+    .social-buttons a:hover { background:white; color:#ff69b4; }
+
+    .filters { text-align:center; margin:20px; }
+    .filters button { margin:0 10px; padding:8px 15px; border:none; border-radius:5px; cursor:pointer; background:#ff69b4; color:white; font-weight:bold; transition:0.3s; }
+    .filters button:hover { background:#ff85c1; }
+
+    .products { display:flex; flex-wrap:wrap; justify-content:center; padding:20px; }
+    .product { background:white; width:220px; margin:15px; border-radius:10px; box-shadow:0px 2px 8px rgba(0,0,0,0.1); text-align:center; transition:0.3s; }
+    .product:hover { transform: translateY(-5px); box-shadow:0px 5px 15px rgba(0,0,0,0.2); }
+    .product img { width:100%; border-radius:10px; cursor:pointer; }
+    .product h3 { margin:10px 0 5px; }
+    .product p { margin:5px 0; }
+    .product button { padding:5px 10px; margin-top:5px; border:none; background-color:#ff69b4; color:white; border-radius:5px; cursor:pointer; font-weight:bold; }
+    .product button:disabled { background:#ccc; cursor:not-allowed; }
+
+    #cart-btn { position:fixed; bottom:20px; right:20px; background:#ff69b4; color:white; border:none; padding:15px 20px; font-size:18px; border-radius:50px; cursor:pointer; box-shadow:0px 2px 10px rgba(0,0,0,0.3); }
+
+    #cart-popup { display:none; position:fixed; bottom:80px; right:20px; width:300px; background:white; border-radius:10px; box-shadow:0px 2px 10px rgba(0,0,0,0.3); padding:15px; }
+    #cart-popup h2 { margin-top:0; }
+    #cart-popup ul { list-style:none; padding:0; max-height:200px; overflow-y:auto; }
+    #cart-popup li { margin:5px 0; }
+    #cart-popup button { background-color:#25D366; color:white; border:none; padding:10px; width:100%; border-radius:5px; font-weight:bold; cursor:pointer; }
+
+    /* Modal for viewing images */
+    #img-modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.8); justify-content:center; align-items:center; }
+    #img-modal img { max-width:90%; max-height:80%; border-radius:10px; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Cony's Collection</h1>
+    <div class="social-buttons">
+        <a href="https://wa.link/uu4orh" target="_blank">WhatsApp</a>
+        <a href="https://www.facebook.com/" target="_blank">Facebook</a>
+        <a href="https://www.tiktok.com/" target="_blank">TikTok</a>
+    </div>
+</header>
+
+<div class="filters">
+    <button onclick="filterCategory('All')">All</button>
+    <button onclick="filterCategory('Dresses')">Dresses</button>
+    <button onclick="filterCategory('Accessories')">Accessories</button>
+</div>
+
+<div class="products" id="products-container"></div>
+
+<button id="cart-btn">Cart 🛒</button>
+
+<div id="cart-popup">
+    <h2>Your Cart</h2>
+    <ul id="cart-items"></ul>
+    <button id="order-btn">Order via WhatsApp</button>
+</div>
+
+<div id="img-modal">
+    <img id="modal-img" src="" alt="View Image">
+</div>
+
+<script>
+    let products = [
+        {name:"Red Dress", price:50, image:"https://via.placeholder.com/220x300?text=Red+Dress", available:true, category:"Dresses"},
+        {name:"Blue Dress", price:45, image:"https://via.placeholder.com/220x300?text=Blue+Dress", available:true, category:"Dresses"},
+        {name:"Golden Earrings", price:30, image:"https://via.placeholder.com/220x300?text=Golden+Earrings", available:false, category:"Accessories"},
+        {name:"Black Handbag", price:60, image:"https://via.placeholder.com/220x300?text=Black+Handbag", available:true, category:"Accessories"},
+        {name:"White Shoes", price:55, image:"https://via.placeholder.com/220x300?text=White+Shoes", available:true, category:"Accessories"}
+    ];
+
+    const productsContainer = document.getElementById('products-container');
+    const cartBtn = document.getElementById('cart-btn');
+    const cartPopup = document.getElementById('cart-popup');
+    const cartItems = document.getElementById('cart-items');
+    const orderBtn = document.getElementById('order-btn');
+    const imgModal = document.getElementById('img-modal');
+    const modalImg = document.getElementById('modal-img');
+    let cart = [];
+    let currentCategory = 'All';
+
+    function displayProducts() {
+        productsContainer.innerHTML = '';
+        let filtered = currentCategory === 'All' ? products : products.filter(p => p.category === currentCategory);
+        filtered.forEach((product,index)=>{
+            const div = document.createElement('div');
+            div.classList.add('product');
+            div.innerHTML = `
+                <img src="${product.image}" alt="${product.name}" onclick="viewImage('${product.image}')">
+                <h3>${product.name}</h3>
+                <p>$${product.price}</p>
+                <p>${product.available ? '<span style="color:green;">Available</span>' : '<span style="color:red;">Out of Stock</span>'}</p>
+                <button ${!product.available ? 'disabled' : ''} onclick="addToCart(${index})">Add to Cart</button>
+            `;
+            productsContainer.appendChild(div);
+        });
+    }
+
+    function filterCategory(category){
+        currentCategory = category;
+        displayProducts();
+    }
+
+    function addToCart(index){
+        cart.push(products[index]);
+        alert(`${products[index].name} added to cart!`);
+        updateCart();
+    }
+
+    function updateCart(){
+        cartItems.innerHTML='';
+        cart.forEach(item=>{
+            const li = document.createElement('li');
+            li.textContent = `${item.name} - $${item.price}`;
+            cartItems.appendChild(li);
+        });
+    }
+
+    cartBtn.addEventListener('click',()=>{ cartPopup.style.display = cartPopup.style.display==='block'?'none':'block'; });
+    orderBtn.addEventListener('click',()=>{
+        if(cart.length===0){ alert("Your cart is empty!"); return; }
+        let message = "Hello! I want to order the following items:\n";
+        cart.forEach(item=>{ message += `- ${item.name} ($${item.price})\n`; });
+        const whatsappLink = "https://wa.link/uu4orh?text="+encodeURIComponent(message);
+        window.open(whatsappLink,"_blank");
+    });
+
+    function viewImage(src){ modalImg.src=src; imgModal.style.display='flex'; }
+    imgModal.addEventListener('click',()=>{ imgModal.style.display='none'; });
+
+    // New items appear at top
+    products = products.reverse();
+
+    displayProducts();
+</script>
+
+</body>
+</html>
